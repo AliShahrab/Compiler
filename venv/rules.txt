@@ -1,0 +1,53 @@
+PROGRAM -> DECLARATION_LIST #pop $
+DECLARATION_LIST -> TEMP_1
+TEMP_1 -> DECLARATION TEMP_1 | ϵ
+DECLARATION -> #push_token int TEMP_11 | #push_token void TEMP_11
+TEMP_11 -> #pid id TEMP_13
+TEMP_13 -> VAR_DECLARATION | FUN_DECLARATION
+VAR_DECLARATION -> #set_id ; | [ #set_array num ] ;
+FUN_DECLARATION -> #define_function  ( PARAMS ) #end_define_function COMPOUND_STMT #set_jp_to_end_of_function
+PARAMS -> PARAM_LIST | #set_void_for_input void TEMP_22
+TEMP_22 -> ϵ | #raise_Illegal_type_of_void TEMP_9 TEMP_2
+PARAM_LIST -> PARAM #set_param_of_function TEMP_2
+TEMP_2 -> , TEMP_21 | ϵ
+TEMP_21 -> PARAM #set_param_of_function TEMP_2 | #raise_Illegal_type_of_void void TEMP_9 TEMP_2
+PARAM -> int TEMP_9
+TEMP_9 -> #pid id TEMP_14
+TEMP_14 -> #push_int_type TEMP_25 | #push_arr_type [ ]
+TEMP_25 -> ϵ
+COMPOUND_STMT -> { #push_scope_and_save_jump DECLARATION_LIST #set_jump_to_current_with_top_of_stack_and_pop STATMENT_LIST } #delete_current_scope_and_set_scope
+STATMENT_LIST -> TEMP_3
+TEMP_3 -> STATEMENT TEMP_3 | ϵ
+STATEMENT -> EXPRESSION_STMT | COMPOUND_STMT | SELECTION_STMT | ITERATION_STMT | RETURN_STMT | SWITCH_STMT
+EXPRESSION_STMT -> EXPRESSION #pop ; | continue #continue_of_while ; | break #break_all ; | ;
+SELECTION_STMT -> if ( EXPRESSION ) #push_code_counter_and_save STATEMENT else #set_jpf_and_push_code_counter_and_save  STATEMENT #if_intermediate_code
+ITERATION_STMT -> #push_while while #push_code_counter #save ( EXPRESSION  ) #push_code_counter_and_save STATEMENT #while_intermediate_code
+RETURN_STMT -> return TEMP_26 #set_return_value_and_set_jmp_to_first_of_function
+TEMP_26 -> #push_void ; | EXPRESSION ;
+SWITCH_STMT -> #push_while switch #push_code_counter #save ( EXPRESSION ) { CASE_STMTS DEFAULT_STMT }
+CASE_STMTS -> TEMP_4
+TEMP_4 -> CASE_STMT TEMP_4 | ϵ
+CASE_STMT -> case #assign_to_temp_token_and_push_temp num : STATMENT_LIST
+DEFAULT_STMT -> default : STATMENT_LIST | ϵ
+EXPRESSION -> #pid id TEMP_16 | SIMPLE_EXPRESSION
+TEMP_16 -> VAR TEMP_17 | CALL TEMP_6 TEMP_5 TEMP_10
+TEMP_17 -> = EXPRESSION #assign | TEMP_6 TEMP_5 TEMP_10
+VAR -> ϵ | [ EXPRESSION #get_element_of_array ]
+SIMPLE_EXPRESSION -> ADDITIVE_EXPRESSION TEMP_10
+TEMP_10 -> < TEMP_19 #less | == TEMP_19 #equal |ϵ
+TEMP_19 -> ADDITIVE_EXPRESSION | #pid id TEMP_15  TEMP_6 TEMP_5
+ADDITIVE_EXPRESSION -> TERM TEMP_5
+TEMP_5 -> + TEMP_18 #adding | - TEMP_18 #subtraction | ϵ
+TEMP_18 -> TERM TEMP_5 | #pid id TEMP_15  TEMP_6 TEMP_5
+TERM -> SIGNED_FACTOR TEMP_6
+TEMP_6 -> * TEMP_20 #multiple | ϵ
+TEMP_20 -> SIGNED_FACTOR TEMP_6 | #pid id TEMP_15 TEMP_6
+SIGNED_FACTOR -> FACTOR | + TEMP_24 | - TEMP_23
+TEMP_23 -> FACTOR #mirror | #pid id TEMP_15 #mirror
+TEMP_24 -> FACTOR | #pid id TEMP_15
+FACTOR -> ( EXPRESSION ) |  #assign_to_temp_token_and_push_temp num
+TEMP_15 -> VAR | CALL
+CALL -> ( #push_call ARGS #set_arguments ) #calling
+ARGS -> ARG_LIST | ϵ
+ARG_LIST -> EXPRESSION TEMP_7
+TEMP_7 -> , EXPRESSION TEMP_7 | ϵ
